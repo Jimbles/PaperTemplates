@@ -1,0 +1,60 @@
+\documentclass[12pt]{iopart}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{IEEEtrantools}
+\usepackage{natbib}
+\def\newblock{\hskip .11em plus .33em minus .07em}
+\usepackage[pdftex]{graphicx}
+\DeclareGraphicsExtensions{.pdf, .png}
+\usepackage{epstopdf}
+
+\usepackage{hyperref}
+\usepackage[caption=false,font=footnotesize]{subfig}
+\usepackage{stfloats}
+\newcommand{\gguide}{{\it Preparing graphics for IOP journals}}
+
+%Used for corrections
+\usepackage{color}
+
+\usepackage{siunitx}
+\sisetup{load-configurations = abbreviations}
+\sisetup{range-phrase=--}
+
+%Uncomment next line if AMS fonts required
+%\usepackage{iopams}  
+
+\begin{document}
+
+% [short title of top title on top of page] {Long Title on Title page}
+\title[Example Short Title]{Long Title thats really interesting}
+\author{James Avery, Someone Else}
+
+\address{University College London, London WC1E 6BT, UK }
+\ead{markus.jehl.11@ucl.ac.uk}
+\begin{abstract}
+\input{0_abstract}
+\end{abstract}
+
+\vspace{2pc}
+\noindent{\it Keywords}: Electrical Impedance Tomography, stroke type detection, multi-fasdrequency image reconstruction, electrode modelling correction
+
+% Uncomment for Submitted to journal title message
+\submitto{\PM}
+\maketitle
+
+\section{Introduction}
+\input{1_intro}
+\section{Methods}
+\input{2_methods}
+\section{Results}
+\input{3_results}
+\section{Discussion}
+\input{4_discussion}
+\section{Conclusion}
+\input{5_conclusion}
+
+\bibliographystyle{jphysicsB}
+\bibliography{Example}
+
+\end{document}
+

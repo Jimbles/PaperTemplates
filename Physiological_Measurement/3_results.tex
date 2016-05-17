@@ -1,0 +1,67 @@
+\subsection{Multi-frequency tissue fraction reconstructions}
+
+When electrode positions were modelled accurately in the reconstruction algorithm, image reconstructions with electrode modelling correction were slightly worse than without correction (figure \ref{no_move}). The average image error of reconstructions without electrode correction was 10\% and with correction 17\%; particularly the reconstruction of the lateral haemorrhage was not good (24\%). The reason for the decreased image quality was the larger number of variables to recover, which slightly increased the ill-posedness of the inverse problem. Consequently, conductivity changes were sometimes explained by electrode movements, if this reduced the value of the objective function.
+
+\begin{figure}[htbp]
+\centering
+	\subfloat[]{\centering\includegraphics[width=0.6\textwidth,trim=2.in 2.8in 2.5in 0.in, clip=true]{./Images/recons_nomove_colourbar.png}
+		\label{no_move}}
+	\hfil
+	\subfloat[]{\centering\includegraphics[width=0.3\textwidth,trim=0.in 0.in 0.5in 0.in, clip=true]{./Images/nomove_quality.eps}
+		\label{no_move_qual}}
+\caption{(a) Multi-frequency fraction reconstructions of strokes without and with electrode modelling correction when electrodes were modelled accurately and (b) the corresponding image error measures.}
+\end{figure}
+
+With the traditional fraction reconstruction MFEIT algorithm, already \SI{0.5}{\milli\metre} of electrode position modelling errors made stroke detection impossible (figure \ref{no_elec_corr}). The average image error of the reconstructions without electrode modelling correction was 55\% (figure \ref{no_elec_qual}).
+
+\begin{figure}[htbp]
+\centering
+	\subfloat[]{\centering\includegraphics[width=0.6\textwidth,trim=2.in 2.8in 2.5in 0.in, clip=true]{./Images/recons_noelec_colourbar.png}
+		\label{no_elec_corr}}
+	\hfil
+	\subfloat[]{\centering\includegraphics[width=0.3\textwidth,trim=0.in 0.in 0.5in 0.in, clip=true]{./Images/noelec_quality.eps}
+		\label{no_elec_qual}}
+\caption{(a) Multi-frequency fraction reconstructions of strokes without electrode modelling correction for two different levels of electrode position errors and (b) the corresponding image error measures.}
+\end{figure}
+
+Simultaneous recovery of stroke tissue fractions and electrode positions significantly improved image quality in the presence of electrode modelling errors (figure \ref{elec_corr}). The average image error of the reconstructed images with correction was 23\% (figure \ref{elec_corr_qual}), excluding the three outliers (numbers 5, 10 and 14) only 16\%. Remarkably, all three bad reconstructions occurred for ischaemic strokes, suggesting that local conductivity spectrum changes caused by ischaemia were more difficult to separate from electrode position errors than for haemorrhage. Such image errors are the result of the combination of errors added to the simulated voltages and the combined uncertainty on all electrode positions, and are consequently difficult to characterise. The shape error of the reconstruction of a lateral ischaemia with electrode movement of \SI{2}{\milli\metre} (number 13) is misleadingly small, because the recovered perturbation was a diagonal disc with very similar x-y-z dimensions than the simulated stroke.
+
+\begin{figure}[htbp]
+\centering
+	\subfloat[]{\centering\includegraphics[width=0.6\textwidth,trim=2.5in 0.in 2.3in 0.in, clip=true]{./Images/recons_colourbar.png}
+		\label{elec_corr}}
+	\hfil
+	\subfloat[]{\centering\raisebox{1.2cm}{\includegraphics[width=0.3\textwidth,trim=0.in 0.in 0.5in 0.in, clip=true]{./Images/recon_quality.eps}}
+		\label{elec_corr_qual}}
+\caption{(a) Multi-frequency fraction reconstructions of strokes using electrode correction for four different levels of electrode position modelling errors and (b) the corresponding image error measures.}
+\end{figure}
+
+\subsection{Electrode placement correction}
+
+The 2-norm of the difference between recovered and simulated electrode position mismatch for both surface dimensions ($dx$ and $dy$) was computed as $\left(\sum_{i} dx_i^2 + dy_i^2\right)^{1/2}$, for electrodes $i$. While the electrode position correction was more accurate for ischaemic strokes when electrodes were correctly modelled, for position mismatch of \SI{1}{\milli\metre} standard deviation the correction was better in the presence of haemorrhages (table \ref{elec_pos_table}). The accuracy of the electrode position recovery tended to correlate with the quality of the reconstructed image (figures \ref{no_move} and \ref{elec_corr}). This is intuitive and was already observed for time-difference electrode movement corrections \citep{Jehl2015b}.
+
+\begin{table}[htbp]
+\renewcommand{\arraystretch}{1.3}
+  \centering
+  \begin{tabular}{ccccc}
+    \hline \hline
+      & \multicolumn{2}{c}{ischaemia} & \multicolumn{2}{c}{haemorrhage} \\
+    \hline
+      & lateral & posterior & lateral & posterior \\ 
+    \hline
+     0 mm & $0.8\cdot10^{-3}$ & $1.6\cdot10^{-3}$ & $1.7\cdot10^{-3}$ & $3.7\cdot10^{-3}$ \\ 
+     1 mm & $13.0\cdot10^{-3}$ & $11.2\cdot10^{-3}$ & $7.1\cdot10^{-3}$ & $5.8\cdot10^{-3}$ \\ 
+    \hline \hline
+  \end{tabular}
+\caption{2-norm of the difference in simulated and recovered electrode position errors when electrodes were accurately modelled in the reconstruction algorithm (first row) and when there was a position mismatch of \SI{1}{\milli\metre} standard deviation along both surface dimensions (second row).}
+\label{elec_pos_table}
+\end{table}
+
+The reason for the worse 2-norm of ischaemic electrode position correction of \SI{1}{\milli\metre} errors, was electrode 17 (entries 33 and 34 on x-axis of figure \ref{elec_pos_fig}). Interestingly, after one iteration of the proposed algorithm, the electrode position recovery of this electrode was still accurate. Only in the second iteration, the electrode was moved several millimetres in both surface dimensions. Since electrode 17 was located laterally, \SI{5.4}{\centi\metre} from the centre of the lateral ischaemia, this affected the reconstruction of the lateral ischaemia more than the reconstruction of the posterior ischaemia (figure \ref{elec_corr}).
+
+\begin{figure}[htbp]	
+\centering
+\includegraphics[width=\textwidth,trim=0.in 0.in 0.5in 0.in, clip=true]{./Images/elec_pos_recov.eps}
+\caption{Recovery of electrode position modelling errors for different stroke types and positions, when electrodes were simulated with standard deviation of \SI{1}{\milli\metre} positional errors (black dashed line). Along the x-axis are the movement components along both surface dimensions for each electrode, i.e. 1\&2 are $x_s$ and $y_s$ of electrode 1, 3\&4 for electrode 2 and so on.}
+\label{elec_pos_fig}
+\end{figure}
