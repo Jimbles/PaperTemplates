@@ -1,101 +1,24 @@
-\subsection{Tissue fraction reconstruction with electrode position correction}
+\subsection{Making a thing}
 
-The general structure of the used multi-frequency reconstruction algorithm was identical to the one published by \citet{Malone2013}. To be able to use conductivity measurements at different frequencies $\omega_i, i=1,\dots,W$ simultaneously in a single image reconstruction, the conductivity spectrum of one element in the mesh was described as a linear combination of the known spectra of present tissues $t_j, j=1,\dots,T$. Instead of reconstructing conductivities directly, the prior knowledge of the conductivity spectrum $\epsilon_{ij}$ of all tissues was therefore used to assign fractions $f_{nj}$ of these tissues to all finite elements $n=1,\dots,N$, such that
-\begin{equation}
-\sigma_n\left(\omega_i\right) = \sum_{j=1}^T f_{nj} \cdot \epsilon_{ij},
-\end{equation}
-where $0 \leq f_{nj} \leq 1$, $\sum_{j=1}^T f_{nj} = 1$ and $\boldsymbol{f}_j \in \mathbb{R}^{1 \times N} = [f_{1j},\dots,f_{Nj}]$. The modified Jacobian matrix at each frequency was obtained from the non-linear EIT forward map $A$ using the chain rule
-\begin{equation}
-\frac{\partial A(\boldsymbol{\sigma}_i)}{\partial \boldsymbol{f}_j} = \frac{\partial A}{\partial \boldsymbol{\sigma}_i}\frac{\partial \boldsymbol{\sigma}_i}{\partial \boldsymbol{f}_j} = \frac{\partial A}{\partial \boldsymbol{\sigma}_i} \epsilon_{ij} = \mathbf{J}(\boldsymbol{\sigma}_i) \cdot \epsilon_{ij} = \mathbf{J}_{ij} \in \mathbb{R}^{R \times N},
-\end{equation}
-where $r = 1,\dots,R$ are the lines in the protocol, i.e. the combinations of different current injection and voltage measurement electrode pairs $d$ and $m$. The Jacobian matrix $\mathbf{J}(\boldsymbol{\sigma}_i)$ relating voltage changes to changes in conductivity $\boldsymbol{\sigma}_i$ at each frequency $\omega_i$, was computed using the adjoint fields method (derived e.g. in the Appendix of \citet{Polydorides2002}), giving one entry for element $n$ as
-\begin{equation}
-\label{adjoint_field}
-\mathrm{J}_{rn} = - \int_{n} \, \nabla \boldsymbol{u}^d \cdot \nabla \boldsymbol{u}^m \, dV,
-\end{equation}
-where $\boldsymbol{u}^d \in H^1(\Omega)$ is the electric potential emerging when the drive current $\boldsymbol{I}^d$ is applied to the electrodes and $\boldsymbol{u}^m \in H^1(\Omega)$ the electric potential when a unit current is applied to the two measurement electrodes.
-
-In order to correct for wrongly modelled electrode positions, this `traditional' Jacobian matrix was augmented by an electrode boundary Jacobian $\mathbf{EBJ} \in \mathbb{R}^{R \times E}$, relating electrode boundary changes (in our case electrode movement) to voltage changes. Given a continuous vector field $\boldsymbol{v}$ on the boundary of electrode $e = 1, \dots, E$, one entry of the $\mathbf{EBJ}$ can be computed similarly to the conductivity Jacobian \citep{Darde2012, Jehl2015b}
-\begin{equation}
-\label{elec_jac}
-\mathrm{EBJ}_{re} = - \frac{1}{z_e} \int_{\partial E_e} (\boldsymbol{v} \cdot \boldsymbol{n}_{\partial E})(U_e^d - \boldsymbol{u}^d)(U_e^m - \boldsymbol{u}^m) \, ds,
-\end{equation}
-where $z_e$ is the contact impedance, $U_e^d$ and $U_e^m$ the drive and measurement electrode potentials and $\boldsymbol{n}_{\partial E}$ the outward normal of the electrode boundary, tangential to the head surface. The vector field $\boldsymbol{v}$ describes the studied change in the electrode boundary, e.g. to compute the $\mathbf{EBJ}$ with respect to movement along one direction, the vector field was chosen to point homogeneously in this direction. The Jacobian matrices were combined $\boldsymbol{\Upsilon}_i = [\mathbf{J}_{i1}, \dots, \mathbf{J}_{iT}, \mathbf{EBJ}_i]$ and the unknown electrode position errors $\boldsymbol{p}$ were appended to the vector of the tissue fractions to be recovered $\boldsymbol{x} = [\boldsymbol{f},\boldsymbol{p}]^{\top}$, where $\boldsymbol{f} = [\boldsymbol{f}_1, \dots, \boldsymbol{f}_T]$ and $\boldsymbol{p}$ consisted of two variables per electrode that described electrode movements along both surface directions $x_s$ and $y_s$, $\boldsymbol{p} = [p_{x_s}^1, p_{y_s}^1, p_{x_s}^2, p_{y_s}^2, \dots]$. The regularised objective function to be minimised was then
-\begin{equation}
-\label{obj_fct}
-\Phi(\boldsymbol{x}) = \frac{1}{2}\left[\sum_{i=2}^W\Big\lVert\left(\boldsymbol{\Upsilon}_i - \boldsymbol{\Upsilon}_1\right)\boldsymbol{x} - \left(\mathbf{v}(\omega_i)-\mathbf{v}(\omega_1)\right)\Big\rVert^2 + \tau \Psi(\boldsymbol{x}) \right],
-\end{equation}
-with $\mathbf{v}(\omega_i)$ being the boundary voltages measured at frequency $\omega_i$ and the regularisation term
-\begin{equation}
-\Psi(\boldsymbol{x}) = \boldsymbol{x}^{\top}\mathbf{\Sigma}_x^{\top}\mathbf{D}^{\top}\mathbf{D}\mathbf{\Sigma}_x\boldsymbol{x}.
-\end{equation}
-The regularisation matrix $\mathbf{D}$ comprised one Laplacian matrix per recovered tissue and one identity matrix for the electrode movement variables. All components were scaled according to the expected standard deviation of the corresponding variable changes $\operatorname{std}_f = 0.01$ and $\operatorname{std}_p = \SI{1}{\milli\metre}$
-\begin{equation}
-\mathbf{D} = \begin{bmatrix} \mathbf{L} & 0 & 0 & 0 \\
-							 0 & \ddots & 0 & 0 \\ 
-							 0 & 0 & \mathbf{L} & 0 \\
-							 0 & 0 & 0 & \mathbf{I}
-			 \end{bmatrix} \quad;\quad 
-\mathbf{\Sigma}_x = \begin{bmatrix} \operatorname{std}_f^{-1} \cdot \mathbf{I} & 0 & 0 & 0 \\
-							 		0 & \ddots & 0 & 0 \\ 
-							 		0 & 0 & \operatorname{std}_f^{-1} \cdot \mathbf{I} & 0 \\
-							 		0 & 0 & 0 & \operatorname{std}_p^{-1} \cdot \mathbf{I}
-			 		\end{bmatrix}.
-\end{equation}
-
-The minimisation of the objective function \eqref{obj_fct} was performed by alternating steps of gradient projection) and damped Gauss-Newton algorithms. The gradient projection \citep{Nocedal1999} step was used to quickly move to the neighbourhood of the minimum, while considering the constraints on the fractions. This was done by computing the step sizes along the gradient, at which one of the fraction values reaches a constraint, i.e. 0 or 1. The change of the objective function value along each of the resulting intervals was approximated quadratically using Taylor series. Once one Taylor approximation found a minimum on an interval, this so-called Cauchy point $\boldsymbol{x}_c$ was chosen, otherwise the gradient projection algorithm continued on the next interval until a minimum was found.
-
-The subsequent Gauss-Newton step was only applied to the components that did not reach a constraint during the gradient projection. The search direction was calculated by solving
-\begin{equation}
-\mathbf{H}(\boldsymbol{x}_c) \cdot \boldsymbol{d} = - \nabla \boldsymbol{\Phi}(\boldsymbol{x}_c)
-\end{equation}
-using a generalised minimal residual algorithm in order to avoid the explicit calculation of the Hessian matrix $\mathbf{H}$, which is the second derivative of $\boldsymbol{\Phi}(\boldsymbol{x})$ (which was approximated by disregarding the second order derivative of the residual error). The step width along direction $\boldsymbol{d}$ was determined using the Brent line-search method \citep{Brent1973} and the resulting minimum $\boldsymbol{x}_g$ was projected back to the fraction constraints. The point, $\boldsymbol{x}_c$ or $\boldsymbol{x}_g$, that gave a smaller function value was chosen for the next iteration.
-
-The reconstruction of the fractions was constrained to the closed interval $[0, 1]$ and the constraint $\sum_{j=1}^T f_{nj} = 1$ was enforced by substituting $\boldsymbol{f}_1 = \boldsymbol{1} - \sum_{j=2}^T \boldsymbol{f}_j$. After two iterations of gradient projection and Gauss-Newton, the electrode positions had normally converged and were subsequently kept fixed for the remaining iterations. The number of iterations of this reconstruction algorithm was fixed to 10 for all image reconstructions. To avoid the inverse crime \citep{Lionheart2004} and speed up image reconstruction, all reconstruction were made on a coarse 180 thousand element mesh on which the skull and scalp were kept fixed and it was assumed the inside of the skull was occupied by either the brain or the stroke with the initial guess being the healthy brain. The regularisation parameter of $\tau=8\cdot10^{-10}$ was chosen empirically and was the same for all reconstructed images. After each iteration of gradient projection and Gauss-Newton minimisation, the regularisation parameter was halved in the case of ischaemias, and given that the spectral contrast was lower, divided by three for haemorrhages \citep{Viklands2001, Malone2014}.
-
+lalalala 
 \subsection{Data simulation}
 
-The simulation parameters in this study were identical to the ones used in the preliminary feasibility study \citep{Malone2014}. Boundary voltages were computed on a fine 5 million element mesh, which was created from a CT scan of a human head and included three homogeneous tissues: brain, skull and scalp. Computation of the boundary voltages was done with \textsc{Peits} \citep{Jehl2015a} on all 16 processors of a workstation with two \SI{2.4}{\giga\hertz} Intel Xeon CPUs with eight cores and \SI{20}{MB} cache each. It took less than 2 minutes to compute the required 31 forward solutions for each frequency.
-32 electrodes of diameter \SI{10}{\milli\metre} were placed on the surface of the model in the same positions used to acquire EEG measurements \citep{Tidswell2001}. The electrodes were modelled using the complete electrode model (CEM) \citep{Somersalo1992}, and the contact impedance was set to $\SI{1}{\kilo\ohm}\cdot \lvert E\rvert$ for all electrodes, where $\lvert E\rvert$ was the electrode area. The amplitude of the current was set to \SI{140}{\micro\ampere} and twelve frequencies between \SI{5}{\hertz} and \SI{5}{\kilo\hertz} were used (figure \ref{spectra}). 31 linearly independent current injection pairs were created by finding the maximum spanning tree of the electrode positions, thereby maximising the distance between injecting electrodes. Voltage measurements were made for each injection on all adjacent pairs not involved in delivering current. The total number of measurements acquired for each frequency was 869.
+The simulation parameters in this study were identical to the ones used in the preliminary feasibility study \citep{Malone2014}. Boundary voltages were computed on a fine 5 million element mesh, which was created from a CT scan of a human head and included three homogeneous tissues: brain, skull and scalp. 
 
-\begin{figure*}[t!]	
-\centering
-	\subfloat[]{\centering\includegraphics[width=0.48\textwidth,trim=0.in 0.in 0.0in 0in, clip=true]{./Images/spectra.eps}
-		\label{spectra}}
-	\hfil
-	\subfloat[]{\centering\raisebox{0.5cm}{\includegraphics[width=0.24\textwidth,trim=5.5in 1in 4.5in 0.5in, clip=true]{./Images/stroke_side.eps}}
-	\label{figure_methods_model_side}}
-	\hfil
-	\subfloat[]{\centering\raisebox{0.5cm}{\includegraphics[width=0.24\textwidth,trim=6.7in 1.6in 4.5in .5in, clip=true]{./Images/stroke_back.eps}}
-	\label{figure_methods_model_back}}
-\caption{Model: (a) conductivity spectra of the simulated tissues, (b) simulated lateral and (c) posterior stroke position. These simulation parameters were already used in \citet{Malone2014}. \href{https://creativecommons.org/licenses/by/3.0/}{CC BY}}
-\end{figure*}
 
-Strokes were simulated by changing the conductivities of all elements within a \SI{1.5}{\centi\metre} radius of the stroke location. Simulated locations were set in a posterior (figure \ref{figure_methods_model_back}) or lateral position in the head (figure \ref{figure_methods_model_side}), and stroke conductivities were set to the spectral values of ischaemic tissue (figure \ref{spectra}) or to the conductivity of blood, \SI{0.697}{\siemens\per\metre}, for haemorrhage \citep{Horesh2006}. Both proportional and additive noise was added to all simulated voltages:
-\begin{equation}{}
-\mathrm{v}_{\mathrm{with\,noise}}=\mathrm{v}_{\mathrm{no\,noise}}\left(1+\operatorname{rand}(\varsigma_p)\right)+\operatorname{rand}(\varsigma_a),
-\end{equation}
-where $\operatorname{rand}(\varsigma)$ indicates a random number drawn from a Gaussian distribution with zero mean and standard deviation $\varsigma$. The standard deviation of the proportional noise was $\varsigma_p=0.02\%$ and the standard deviation of the additive noise was $\varsigma_a=\SI{5}{\micro\volt}$, which correspond to human measurements \citep{Goren2015}.
+%
+%\begin{figure*}[t!]	
+%\centering
+%	\subfloat[]{\centering\includegraphics[width=0.48\textwidth,trim=0.in 0.in 0.0in 0in, clip=true]{./Images/spectra.eps}
+%		\label{spectra}}
+%	\hfil
+%	\subfloat[]{\centering\raisebox{0.5cm}{\includegraphics[width=0.24\textwidth,trim=5.5in 1in 4.5in 0.5in, clip=true]{./Images/stroke_side.eps}}
+%	\label{figure_methods_model_side}}
+%	\hfil
+%	\subfloat[]{\centering\raisebox{0.5cm}{\includegraphics[width=0.24\textwidth,trim=6.7in 1.6in 4.5in .5in, clip=true]{./Images/stroke_back.eps}}
+%	\label{figure_methods_model_back}}
+%\caption{Model: (a) conductivity spectra of the simulated tissues, (b) simulated lateral and (c) posterior stroke position. These simulation parameters were already used in \citet{Malone2014}. \href{https://creativecommons.org/licenses/by/3.0/}{CC BY}}
+%\end{figure*}
 
-Electrode positions can currently be measured to around \SI{1}{\milli\metre} precision using photogrammetry \citep{Qian2011}. Other technologies, such as the commercial MicroScribe, laser 3D scanners, or electrode helmets, can achieve an even higher precision in electrode localisation. Simulated electrode position errors were therefore created by drawing two random numbers for each electrode from Gaussian distributions with zero mean and standard deviations \SI{0.5}{\milli\metre}, \SI{1}{\milli\metre}, \SI{1.5}{\milli\metre} and \SI{2}{\milli\metre}. According to these drawn random numbers, the electrodes were then moved along a two dimensional surface coordinate system \citep{Jehl2015b}. Consequently, the overall electrode position errors were the combined errors of the displacement along the two surface dimensions, and deviations of up to 3 times the standard deviation of the error were expected in the majority of cases.
 
-Previous methods for computing the electrode movement Jacobian include the computationally intensive differential approximations by moving nodes in the mesh \citep{Soleimani2006}, which are limited to relatively coarse meshes, direct methods based on the mesh geometry \citep{Gomez-Laberge2008} and the approximation error approach \citep{Nissinen2011}. However, the analytical formulation of the Fr\'{e}chet derivative with respect to the electrode boundary presented by \citet{Darde2012} is the most flexible approach, since it can be used for different electrode characteristics independent of mesh refinement and can be implemented in a very fast and memory efficient way \citep{Jehl2015b}. Another advantage of this implementation is the possibility to move electrodes without altering the mesh geometry, by changing the assignment of the surface facets to the electrodes instead. This allows for larger movement of electrodes, while maintaining a good mesh quality and refinement.
-
-\subsection{Image quantification}
-
-The quality of an image was objectively quantified in terms of the ability to distinguish the stroke from the brain. This was done by assessing the fraction $\boldsymbol{f}_s$ corresponding to the tissue that made up the anomaly. First, the images reconstructed on the 180 thousand element mesh were averaged onto cubic voxels with \SI{0.5}{\centi\metre} sides. The volume $P$ corresponding to the reconstructed perturbation was identified as the largest connected cluster of voxels with values larger than 50\% of the maximum of the image \citep{Malone2013, Jehl2015b}. Three measures of image errors were defined:
-\begin{enumerate}
-\item Location error: ratio between the distance $\lVert(x_P, y_P, z_P)\rVert$ of the centre of mass of the reconstructed perturbation $P$ from the actual position, and the average dimension of the head $\operatorname{mean}(d_x,d_y,d_z)$
-\begin{equation}
-\frac{\lVert (x_P, y_P, z_P) \rVert}{\operatorname{mean}(d_x,d_y,d_z)}.
-\end{equation}
-\item Shape error: ratio of the difference between the dimensions of the simulated $(s_x,s_y,s_z)$ and reconstructed perturbation $(r_x,r_y,r_z)$, and the dimensions of the simulated perturbation
-\begin{equation}
-\frac{\lVert (r_x-s_x, r_y-s_y, r_z-s_z) \rVert}{\lVert (s_x, s_y, s_z) \rVert}.
-\end{equation}
-\item Image noise: inverse of the contrast-to-noise ratio between the perturbation $P$ and the background $B$
-\begin{equation}
-\frac{\operatorname{std}(f_s^B)}{\left|\bar{f}_s^P-\bar{f}_s^B\right|},
-\end{equation}
-where $\bar{f}_s^P$ and $\bar{f}_s^B$ are the mean intensities of the perturbation and background and $\operatorname{std}$ the standard deviation.
-\end{enumerate}
+\subsection{things}
